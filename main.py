@@ -76,7 +76,7 @@ if __name__ == '__main__':
         axs[0][3].plot(data_magnet[:,ii],
                     label='${}$'.format(magnet_labels[ii]))
 
-    axs[0][0].set_title('IMU device Odometry for Camera Extrinsic',fontsize=20)
+    axs[0][0].set_title('',fontsize=20)
     axs[0][0].legend(fontsize=14)
     axs[0][0].set_ylabel('$a_{x,y,z}$ [$m^{2}/s$]',fontsize=18)
     axs[0][0].set_ylim([-20,20])
@@ -96,6 +96,6 @@ if __name__ == '__main__':
 
     # axs[0].set_title('IMU device Odometry for Camera Extrinsic',fontsize=22)
 
-    fig.savefig('gyro_calibration_output.png',dpi=300,bbox_inches='tight',facecolor='#FCFCFC')
+    fig.savefig('position_output.png',dpi=300,bbox_inches='tight',facecolor='#FCFCFC')
     # fig.show()
     # input()
