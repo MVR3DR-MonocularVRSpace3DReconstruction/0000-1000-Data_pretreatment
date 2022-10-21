@@ -37,7 +37,7 @@ cam.iso = 800
 # 如50 ISO, 64 ISO, 100 ISO表示在曝光感应速度上要比高数值的来得慢，高数值ISO是指超过200以上的标准，如200 ISO, 400 ISO
 cam.sharpness = 0 #设置图像的锐度值，默认是0，取值范围是-100~100之间
 
-# cam.vflip = True
+cam.vflip = True
 cam.start_preview(fullscreen=False, window=(0,0,640,480))
 # cam.start_preview()
 
