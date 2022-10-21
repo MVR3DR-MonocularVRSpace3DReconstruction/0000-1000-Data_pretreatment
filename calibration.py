@@ -63,6 +63,7 @@ class StereoCalibration(object):
     def __init__(self):
         self.imagesL = self.read_images('calibration/left')
         self.imagesR = self.read_images('calibration/right')
+        assert len(self.imagesL) == len(self.imagesR)
 
     def read_images(self , cal_path):
         filepath = glob.glob(cal_path + '/*.png')

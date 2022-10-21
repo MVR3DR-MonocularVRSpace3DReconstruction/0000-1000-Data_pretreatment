@@ -25,7 +25,7 @@ GPIO.setup(recording_key,GPIO.IN,GPIO.PUD_UP)
 # Camera init
 ####################################################
 cam = picamera.PiCamera(stereo_mode='side-by-side', stereo_decimate=False)
-cam.framerate = 30
+cam.framerate = 32
 cam.resolution = (1280, 480) # 1280 x 480   2560 x 720  960 x 320
 # cam.exposure_mode = 'antishake' # auto
 
@@ -38,6 +38,7 @@ cam.iso = 800
 cam.sharpness = 0 #设置图像的锐度值，默认是0，取值范围是-100~100之间
 
 cam.vflip = True
+cam.hflip = True
 cam.start_preview(fullscreen=False, window=(0,0,640,480))
 # cam.start_preview()
 
@@ -90,9 +91,10 @@ except KeyboardInterrupt:
     # 當你按下 CTRL+C 中止程式後，所要做的動作
     print("STOP")
   
-except:  
+except Exception as e:  
     # 其他例外發生的時候，所要做的動作
     print("Other error or exception occurred!" )
+    print(e)
   
 finally:  
     GPIO.cleanup() # 把這段程式碼放在 finally 區域，確保程式中止時能夠執行並清掉GPIO的設定！
