@@ -1,3 +1,4 @@
+
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt # plt 用于显示图片
@@ -75,7 +76,7 @@ def rectifyImage(image1, image2, map1x, map1y, map2x, map2y):
     return rectifyed_img1, rectifyed_img2
  
 # 立体校正检验----画线
-def draw_line1(image1, image2):
+def draw_line_RGB(image1, image2):
     # 建立输出图像
     height = max(image1.shape[0], image2.shape[0])
     width = image1.shape[1] + image2.shape[1]
@@ -86,10 +87,9 @@ def draw_line1(image1, image2):
  
     for k in range(15):
         cv2.line(output, (0, 50 * (k + 1)), (2 * width, 50 * (k + 1)), (0, 255, 0), thickness=2, lineType=cv2.LINE_AA)  # 直线间隔：100
- 
     return output
 # 立体校正检验----画线
-def draw_line2(image1, image2):
+def draw_line_depth(image1, image2):
     # 建立输出图像
     height = max(image1.shape[0], image2.shape[0])
     width = image1.shape[1] + image2.shape[1]
@@ -97,12 +97,11 @@ def draw_line2(image1, image2):
     output = np.zeros((height, width), dtype=np.uint8)
     output[0:image1.shape[0], 0:image1.shape[1]] = image1
     output[0:image2.shape[0], image1.shape[1]:] = image2
- 
     for k in range(15):
         cv2.line(output, (0, 50 * (k + 1)), (2 * width, 50 * (k + 1)), (0, 255, 0), thickness=2, lineType=cv2.LINE_AA)  # 直线间隔：100
-    
-    
     return output
+
+
 # 视差计算
 def disparity_SGBM(left_image, right_image, down_scale=False):
     # SGBM匹配参数设置
@@ -148,33 +147,38 @@ def disparity_SGBM(left_image, right_image, down_scale=False):
 if __name__ == '__main__':
 
     stereo.show()
-    if stereo.m1 == 0:
+    if not type(stereo.m1) is np.ndarray:
         calibration = StereoCalibration()
         calibration.calibration_photo()
         stereo.show()
 
     data_dir = "frames/22-10-20_21-28-02/"
-    imgL = cv2.imread(data_dir+"left/00001.png")
-    imgR = cv2.imread(data_dir+"right/00001.png")
+    imgL = cv2.imread(data_dir+"left/00233.png")
+    imgR = cv2.imread(data_dir+"right/00233.png")
     #imgL , imgR = preprocess(imgL ,imgR )
    
     height, width = imgL.shape[0:2]
     config = stereoCameral(stereo)    # 读取相机内参和外参
 
-    # 去畸变
-    imgL = undistortion(imgL ,config.cam_matrix_left , config.distortion_l )
-    imgR = undistortion(imgR ,config.cam_matrix_right, config.distortion_r )
+    # # 去畸变
+    # imgL = undistortion(imgL ,config.cam_matrix_left , config.distortion_l )
+    # imgR = undistortion(imgR ,config.cam_matrix_right, config.distortion_r )
    
     # 去畸变和几何极线对齐
     map1x, map1y, map2x, map2y, Q = getRectifyTransform(height, width, config)
     iml_rectified, imr_rectified = rectifyImage(imgL, imgR, map1x, map1y, map2x, map2y)
-    linepic = draw_line1(iml_rectified , imr_rectified)
+    linepic = draw_line_RGB(iml_rectified , imr_rectified)
     cv2.imshow("linepic", linepic)
-    cv2.waitKey(1)
     # 计算视差
-    lookdispL,lookdispR = disparity_SGBM(iml_rectified  , imr_rectified )
-    linepic2 = draw_line2(lookdispL,lookdispR)
-
+    originL, originR = disparity_SGBM(imgL  , imgR )
+    origin = draw_line_depth(originL, originR)
+    cv2.imshow("origin", origin)
+    dispL,dispR = disparity_SGBM(iml_rectified  , imr_rectified )
+    linepic2 = draw_line_depth(dispL, dispR)
     cv2.imshow("linepic2", linepic2)
-    cv2.waitKey(1)
-#     points_3d = cv2.reprojectImageTo3D(lookdispL, Q)
+
+    while True:
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+
+#     points_3d = cv2.reprojectImageTo3D(dispL, Q)
