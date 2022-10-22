@@ -109,9 +109,9 @@ def disparity_SGBM(left_image, right_image, down_scale=False):
         img_channels = 1
     else:
         img_channels = 3
-    blockSize = 3
+    blockSize = 3 # 3
     param = {'minDisparity': 0,
-             'numDisparities': 128,
+             'numDisparities': 16, # 128
              'blockSize': blockSize,
              'P1': 8 * img_channels * blockSize ** 2,
              'P2': 32 * img_channels * blockSize ** 2,
@@ -139,46 +139,58 @@ def disparity_SGBM(left_image, right_image, down_scale=False):
         disparity_right_half = sgbm.compute(right_image_down, left_image_down)
         disparity_left = cv2.resize(disparity_left_half, size, interpolation=cv2.INTER_AREA)
         disparity_right = cv2.resize(disparity_right_half, size, interpolation=cv2.INTER_AREA)
-        disparity_left *= factor
-        disparity_right *= factor
+        disparity_left = disparity_left * factor
+        disparity_right = disparity_right * factor
  
     return disparity_left, disparity_right
+
+def disparity_BM(left_image, right_image, down_scale=False):
+    stereo = cv2.StereoBM_create(numDisparities=16, blockSize=15)
+    disparityL = stereo.compute(left_image,right_image)
+    disparityR = stereo.compute(right_image,left_image)
+
+    return disparityL, disparityR
+
 
 if __name__ == '__main__':
 
     stereo.show()
     if not type(stereo.m1) is np.ndarray:
         calibration = StereoCalibration()
-        calibration.calibration_photo()
+        calibration.calibration_photo(11, 8)
         stereo.show()
 
-    data_dir = "frames/22-10-20_21-28-02/"
-    imgL = cv2.imread(data_dir+"left/00233.png")
-    imgR = cv2.imread(data_dir+"right/00233.png")
+    data_dir = "frames/22-10-22_15-34-30/"
+    imgL = cv2.imread(data_dir+"left/00001.png")
+    imgR = cv2.imread(data_dir+"right/00001.png")
     #imgL , imgR = preprocess(imgL ,imgR )
    
     height, width = imgL.shape[0:2]
     config = stereoCameral(stereo)    # 读取相机内参和外参
 
     # # 去畸变
-    # imgL = undistortion(imgL ,config.cam_matrix_left , config.distortion_l )
-    # imgR = undistortion(imgR ,config.cam_matrix_right, config.distortion_r )
+    imgL = undistortion(imgL ,config.cam_matrix_left , config.distortion_l )
+    imgR = undistortion(imgR ,config.cam_matrix_right, config.distortion_r )
    
     # 去畸变和几何极线对齐
     map1x, map1y, map2x, map2y, Q = getRectifyTransform(height, width, config)
     iml_rectified, imr_rectified = rectifyImage(imgL, imgR, map1x, map1y, map2x, map2y)
+    
     linepic = draw_line_RGB(iml_rectified , imr_rectified)
-    cv2.imshow("linepic", linepic)
-    # 计算视差
-    originL, originR = disparity_SGBM(imgL  , imgR )
-    origin = draw_line_depth(originL, originR)
-    cv2.imshow("origin", origin)
-    dispL,dispR = disparity_SGBM(iml_rectified  , imr_rectified )
-    linepic2 = draw_line_depth(dispL, dispR)
-    cv2.imshow("linepic2", linepic2)
+    cv2.imwrite("LR.jpg", linepic)
 
-    while True:
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
+    # 计算视差
+    dispL, dispR = disparity_SGBM(iml_rectified, imr_rectified) # disparity_SGBM  disparity_BM
+    
+    
+    linepic2 = draw_line_depth(dispL, dispR)
+    cv2.imwrite("dispLR.jpg", linepic2)
+
+    # reproject
+    depthL = cv2.reprojectImageTo3D(dispL, Q)
+    cv2.imwrite("depthL.jpg", depthL)
+    # while True:
+    #     if cv2.waitKey(1) & 0xFF == ord('q'):
+    #         break
 
 #     points_3d = cv2.reprojectImageTo3D(dispL, Q)

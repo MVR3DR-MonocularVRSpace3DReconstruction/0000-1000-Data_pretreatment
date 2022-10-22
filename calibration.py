@@ -70,12 +70,12 @@ class StereoCalibration(object):
         filepath.sort()
         return filepath
     #标定图像
-    def calibration_photo(self):
+    def calibration_photo(self, x_nums, y_nums):
         match_count = 0
-        #设置要标定的角点个数
-        x_nums = 7                                                   
-        #x方向上的角点个数
-        y_nums = 7
+        # #设置要标定的角点个数
+        # x_nums = 11                                                   
+        # #x方向上的角点个数
+        # y_nums = 8
         # 设置(生成)标定图在世界坐标中的坐标
         world_point = np.zeros((x_nums * y_nums,3),np.float32)            
         #生成x_nums*y_nums个坐标，每个坐标包含x,y,z三个元素
@@ -101,12 +101,9 @@ class StereoCalibration(object):
             gray_r = cv2.cvtColor(image_r,cv2.COLOR_RGB2GRAY)
 
             #查找角点
-            #ok,corners = cv2.findChessboardCorners(gray,(x_nums,y_nums),None)
-            #ok1,cornersl = cv2.findChessboardCorners(gray_l,(x_nums,y_nums),None)
-            #ok2,cornersr = cv2.findChessboardCorners(gray_r,(x_nums,y_nums),None)
-            ok1,cornersl = cv2.findCirclesGrid(gray_l,(x_nums,y_nums),None)
-            ok2,cornersr = cv2.findCirclesGrid(gray_r,(x_nums,y_nums),None)
-           
+            ok1, cornersl = cv2.findChessboardCorners(gray_l,(x_nums,y_nums),None)
+            ok2, cornersr = cv2.findChessboardCorners(gray_r,(x_nums,y_nums),None)
+
             self.world = world_point
             print("=>",ok1, ok2)
             
@@ -175,4 +172,4 @@ class StereoCalibration(object):
 if __name__ == '__main__':
     #calibration_photo()
     calibration = StereoCalibration()
-    calibration.calibration_photo()
+    calibration.calibration_photo(11, 8)
