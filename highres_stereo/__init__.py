@@ -1,2 +1,0 @@
-from highres_stereo.highres_stereo import HighResStereo
-import highres_stereo.utils_highres as utils_highres

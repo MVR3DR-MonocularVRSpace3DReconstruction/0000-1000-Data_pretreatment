@@ -1,9 +1,8 @@
-from itertools import count
+# from itertools import count
 import cv2
+# import matplotlib.pyplot as plt # plt 用于显示图片
+# import matplotlib.image as mpimg # mpimg 用于读取图片
 
-import matplotlib.pyplot as plt # plt 用于显示图片
-import matplotlib.image as mpimg # mpimg 用于读取图片
- 
 import sys
 import numpy as np
 import glob
