@@ -6,9 +6,6 @@ import matplotlib.image as mpimg # mpimg 用于读取图片
 
 from calibration import StereoCalibration, stereo
 
-from highres_stereo import HighResStereo
-from highres_stereo.utils_highres import Config, CameraConfig, draw_disparity, draw_depth, QualityLevel
-
 #双目相机参数
 class stereoCameral(object):
     def __init__(self, stereo):
@@ -182,24 +179,18 @@ if __name__ == '__main__':
     linepic = draw_line_RGB(iml_rectified , imr_rectified)
     cv2.imwrite("LR.jpg", linepic)
 
-
-    
-    # # 计算视差
-    # dispL, dispR = disparity_SGBM(iml_rectified, imr_rectified) # disparity_SGBM  disparity_BM
-    # linepic2 = draw_line_depth(dispL, dispR)
-    # cv2.imwrite("dispLR.jpg", linepic2)
+    # 计算视差
+    dispL, dispR = disparity_SGBM(iml_rectified, imr_rectified) # disparity_SGBM  disparity_BM
     
     
-    config = Config(clean=-1, qualityLevel = QualityLevel.High, max_disp=128, img_res_scale=1)
-    model_path = "models/final-768px.tar"
-    # Initialize model
-    highres_stereo_depth = HighResStereo(model_path, config, use_gpu=True)
-    # Estimate the depth
-    disparity_map = highres_stereo_depth(iml_rectified, imr_rectified)
+    linepic2 = draw_line_depth(dispL, dispR)
+    cv2.imwrite("dispLR.jpg", linepic2)
 
-    color_disparity = draw_disparity(disparity_map)
-    color_disparity = cv2.resize(color_disparity, (iml_rectified.shape[1],iml_rectified.shape[0]))
+    # reproject
+    depthL = cv2.reprojectImageTo3D(dispL, Q)
+    cv2.imwrite("depthL.jpg", depthL)
+    # while True:
+    #     if cv2.waitKey(1) & 0xFF == ord('q'):
+    #         break
 
-    combined_image = np.hstack((iml_rectified, imr_rectified, color_disparity))
-    combined_image = cv2.putText(combined_image, f'{highres_stereo_depth.fps} fps', (50,50), cv2.FONT_HERSHEY_SIMPLEX, 1,(255,255,255),2, cv2.LINE_AA)
-    cv2.imwrite("depth.jpg", combined_image)
+#     points_3d = cv2.reprojectImageTo3D(dispL, Q)
