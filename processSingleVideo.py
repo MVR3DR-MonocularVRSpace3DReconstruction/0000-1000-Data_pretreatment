@@ -34,7 +34,7 @@ for v in videos:
         out = v.split("/")[-1].replace(".h264", "")
         print("=> ",out)
         cmd = 'ffmpeg -i {} {}{}.mp4'.format(v, out_dir, out)
-        subprocess.run(cmd, shell=True)
+        # subprocess.run(cmd, shell=True)
 
         print("=> MPEG4 saved.")
 
@@ -49,10 +49,10 @@ for v in videos:
         os.system("mkdir {0}/{1}".format(frame_dir, out)) # rm -rf {0}/{1} && 
         if isLeftVideo:
             os.system("mkdir {0}/{1}/left".format(frame_dir, out))
-            cmd = "ffmpeg -i {}{}-left.h264 {}/{}/left/%05d.bmp".format(raw_dir, out, frame_dir, out)
+            cmd = "ffmpeg -i {}{}-left.h264 -r 20 -f image2 {}/{}/left/%05d.bmp".format(raw_dir, out, frame_dir, out)
         else:
             os.system("mkdir {0}/{1}/right".format(frame_dir, out))
-            cmd = "ffmpeg -i {}{}-right.h264 {}/{}/right/%05d.bmp".format(raw_dir, out, frame_dir, out)
+            cmd = "ffmpeg -i {}{}-right.h264 -r 20 -f image2 {}/{}/right/%05d.bmp".format(raw_dir, out, frame_dir, out)
         print(cmd)
         subprocess.run(cmd, shell=True)
         
@@ -62,5 +62,5 @@ for v in videos:
         print(e)
     
     finally:  
-        os.system("mv {0} {0}.fin".format(v))
+        # os.system("mv {0} {0}.fin".format(v))
         print("=> Frames sliced.")
