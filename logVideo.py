@@ -91,9 +91,10 @@ try:
             if not recording and keyPressed:
                 print("=> Start Recording")
                 videoTime = datetime.now().strftime("%y-%m-%d_%H-%M-%S")
-                # in_route = raw_dir + videoTime + ".h264"
+                in_left = raw_dir + videoTime + "-left.h264"
+                in_right = raw_dir + videoTime + "-right.h264"
                 # cam.start_recording(in_route, format="h264", quality=10)
-                cmd = "raspivid -w 1280 -h 720 -p 0,0,480,270 -cs 0 -t 0 -o camera0.h264 & raspivid -w 1280 -h 720 -p 480,0,480,270 -cs 1 -t 0 -o camera1.h264"
+                cmd = "raspivid -w 1280 -h 720 -p 0,0,480,270 -cs 1 -t 0 -vf -hf -o {} & raspivid -w 1280 -h 720 -p 480,0,480,270 -cs 0 -t 0 -vf -hf -o {}".format(in_left, in_right)
                 process = subprocess.Popen(cmd,
                     stdin=subprocess.PIPE,
                     stdout=subprocess.PIPE,
