@@ -109,6 +109,7 @@ try:
                 process.terminate()
                 print("=> Done! <{}> saved!".format(videoTime))
                 full_dark()
+                time.sleep(0.5)
                 recording = not recording
 
 
