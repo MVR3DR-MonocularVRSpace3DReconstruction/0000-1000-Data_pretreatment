@@ -57,8 +57,8 @@ try:
             in_left = raw_dir + videoTime + "-left.h264"
             in_right = raw_dir + videoTime + "-right.h264"
             # cam.start_recording(in_route, format="h264", quality=10)
-            cmd = "raspistill -w 1280 -h 720 -fps 20 -p 0,0,480,270 -cs 1 -t 50 -tl 0 -vf -hf -o {0}/left/%5d.bmp \
-                & raspistill -w 1280 -h 720 -fps 20 -p 480,0,480,270 -cs 0 -t 50 -tl 0 -vf -hf -o {0}/right/%5d.bmp".format(frame_dir)
+            cmd = "raspistill -th 480,270 -e bmp -cs 1 -t 0 -tl 50 -vf -hf -o {0}/left/%5d.bmp \
+                & raspistill -th 480,270 -e bmp -cs 0 -t 0 -tl 50 -vf -hf -o {0}/right/%5d.bmp".format(frame_dir)
             process = subprocess.Popen(cmd,
                 stdin=subprocess.PIPE,
                 stdout=subprocess.PIPE,
