@@ -94,7 +94,8 @@ try:
                 in_left = raw_dir + videoTime + "-left.h264"
                 in_right = raw_dir + videoTime + "-right.h264"
                 # cam.start_recording(in_route, format="h264", quality=10)
-                cmd = "raspivid -w 1280 -h 720 -p 0,0,480,270 -cs 1 -t 0 -vf -hf -o {} & raspivid -w 1280 -h 720 -p 480,0,480,270 -cs 0 -t 0 -vf -hf -o {}".format(in_left, in_right)
+                cmd = "raspivid -w 1280 -h 720 -fps 20 -p 0,0,480,270 -cs 1 -t 0 -vf -hf -o {} \
+                    & raspivid -w 1280 -h 720 -fps 20 -p 480,0,480,270 -cs 0 -t 0 -vf -hf -o {}".format(in_left, in_right)
                 process = subprocess.Popen(cmd,
                     stdin=subprocess.PIPE,
                     stdout=subprocess.PIPE,
