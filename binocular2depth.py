@@ -167,8 +167,8 @@ if __name__ == '__main__':
         stereo.show()
 
     draw_process = False
-    data_dir = "frames/22-10-25_23-19-58/"
-    out_dir = "depth/22-10-25_23-19-58/"
+    data_dir = "frames/22-10-26_01-13-42/"
+    out_dir = "depth/22-10-26_01-13-42/"
     os.system("rm -rf {0} && mkdir {0}".format(out_dir))
 
     imgL_dir = sorted(glob.glob(data_dir+"left/*.bmp"))
@@ -207,9 +207,9 @@ if __name__ == '__main__':
             # cv2.imshow("left.bmp", imgL)
             # cv2.imshow("right.bmp", imgR)
         
-        imgL = remove_black_borders(imgL)
-        
-        cv2.imshow("imgL", imgL)
+        # imgL = remove_black_borders(imgL)
+        # imgR = remove_black_borders(imgR)
+        # cv2.imshow("imgL", imgL)
         
         
         # Resize image in case the GPU memory overflows
