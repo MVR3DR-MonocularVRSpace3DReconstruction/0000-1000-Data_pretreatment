@@ -151,41 +151,8 @@ def inference(left, right, model, n_iter=20):
 
 	return pred_disp
 
-def remove_black_borders(image):
-    
-    ret, image = cv2.threshold(image,5,255,cv2.THRESH_BINARY_INV)
-    # print(image)
-    y_nonzero, x_nonzero, _ = np.nonzero(image)
-    return image[np.min(y_nonzero):np.max(y_nonzero), np.min(x_nonzero):np.max(x_nonzero)]
-
-if __name__ == '__main__':
-
-    stereo.show()
-    if not type(stereo.m1) is np.ndarray:
-        calibration = StereoCalibration()
-        calibration.calibration_photo(11, 8)
-        stereo.show()
-
-    draw_process = False
-    data_dir = "frames/22-10-26_01-13-42/"
-    out_dir = "depth/22-10-26_01-13-42/"
-    os.system("rm -rf {0} && mkdir {0}".format(out_dir))
-
-    imgL_dir = sorted(glob.glob(data_dir+"left/*.bmp"))
-    imgR_dir = sorted(glob.glob(data_dir+"right/*.bmp"))
-    assert len(imgL_dir) == len(imgR_dir)
-
-    config = stereoCameral(stereo)    # 读取相机内参和外参
-    
-    model_path = "models/crestereo_eth3d.pth"
-
-    model = Model(max_disp=256, mixed_precision=False, test_mode=True)
-    model.load_state_dict(torch.load(model_path), strict=True)
-    model.to(device)
-    model.eval()
-    
-
-    for idx in tqdm(range(len(imgL_dir))):
+def block_process(sid, eid):
+    for idx in range(sid, eid):
         imgL = cv2.imread(imgL_dir[idx])
         imgR = cv2.imread(imgR_dir[idx])
 
@@ -194,10 +161,7 @@ if __name__ == '__main__':
         # 去畸变
         imgL = undistortion(imgL, config.cam_matrix_left, config.distortion_l)
         imgR = undistortion(imgR, config.cam_matrix_right, config.distortion_r)
-        if draw_process:
-            linepic = draw_line_RGB(imgL, imgR)
-            cv2.imshow("undistortion", linepic)
-
+    
         # 去畸变和几何极线对齐
         map1x, map1y, map2x, map2y, Q = getRectifyTransform(height, width, config)
         imgL, imgR = rectifyImage(imgL, imgR, map1x, map1y, map2x, map2y)
@@ -235,10 +199,105 @@ if __name__ == '__main__':
         # cv2.namedWindow("output", cv2.WINDOW_NORMAL)
         # cv2.imshow("output", combined_img)
         cv2.imwrite(path, disp_vis)
-        if draw_process:
-            while True:
-                if cv2.waitKey(0) & 0xFF == ord('q'):
-                    break
+        
+
+
+def remove_black_borders(image):
+    
+    ret, image = cv2.threshold(image,5,255,cv2.THRESH_BINARY_INV)
+    # print(image)
+    y_nonzero, x_nonzero, _ = np.nonzero(image)
+    return image[np.min(y_nonzero):np.max(y_nonzero), np.min(x_nonzero):np.max(x_nonzero)]
+
+if __name__ == '__main__':
+
+    stereo.show()
+    if not type(stereo.m1) is np.ndarray:
+        calibration = StereoCalibration()
+        calibration.calibration_photo(11, 8)
+        stereo.show()
+
+    draw_process = False
+    data_dir = "frames/22-10-26_01-13-42/"
+    out_dir = "depth/22-10-26_01-13-42/"
+    os.system("rm -rf {0} && mkdir {0}".format(out_dir))
+
+    imgL_dir = sorted(glob.glob(data_dir+"left/*.bmp"))
+    imgR_dir = sorted(glob.glob(data_dir+"right/*.bmp"))
+    assert len(imgL_dir) == len(imgR_dir)
+
+    config = stereoCameral(stereo)    # 读取相机内参和外参
+    
+    model_path = "models/crestereo_eth3d.pth"
+
+    model = Model(max_disp=256, mixed_precision=False, test_mode=True)
+    model.load_state_dict(torch.load(model_path), strict=True)
+    model.to(device)
+    model.eval()
+    
+    from joblib import Parallel, delayed
+    import multiprocessing
+    import subprocess
+    block_size = 10
+    MAX_THREAD = min(multiprocessing.cpu_count(), 15)
+    Parallel(n_jobs=MAX_THREAD)(delayed(block_process)(
+        sid*block_size, min((sid+1)*block_size, len(imgL_dir)))
+        for sid in range(len(imgL_dir)//block_size))
+    
+    # for idx in tqdm(range(len(imgL_dir))):
+    #     imgL = cv2.imread(imgL_dir[idx])
+    #     imgR = cv2.imread(imgR_dir[idx])
+
+    #     height, width = imgL.shape[0:2]
+        
+    #     # 去畸变
+    #     imgL = undistortion(imgL, config.cam_matrix_left, config.distortion_l)
+    #     imgR = undistortion(imgR, config.cam_matrix_right, config.distortion_r)
+    #     if draw_process:
+    #         linepic = draw_line_RGB(imgL, imgR)
+    #         cv2.imshow("undistortion", linepic)
+
+    #     # 去畸变和几何极线对齐
+    #     map1x, map1y, map2x, map2y, Q = getRectifyTransform(height, width, config)
+    #     imgL, imgR = rectifyImage(imgL, imgR, map1x, map1y, map2x, map2y)
+    #     if draw_process:
+    #         linepic = draw_line_RGB(imgL, imgR)
+    #         cv2.imshow("rectify", linepic)
+    #         # cv2.imshow("left.bmp", imgL)
+    #         # cv2.imshow("right.bmp", imgR)
+        
+    #     # imgL = remove_black_borders(imgL)
+    #     # imgR = remove_black_borders(imgR)
+    #     # cv2.imshow("imgL", imgL)
+        
+        
+    #     # Resize image in case the GPU memory overflows
+    #     eval_h, eval_w = (height,width)
+    #     assert eval_h % 8 == 0, "input height should be divisible by 8"
+    #     assert eval_w % 8 == 0, "input width should be divisible by 8"
+
+    #     imgL = cv2.resize(imgL, (eval_w, eval_h), interpolation=cv2.INTER_LINEAR)
+    #     imgR = cv2.resize(imgR, (eval_w, eval_h), interpolation=cv2.INTER_LINEAR)
+
+
+    #     pred = inference(imgL, imgR, model, n_iter=20)
+
+    #     t = float(width) / float(eval_w)
+    #     disp = cv2.resize(pred, (width, height), interpolation=cv2.INTER_LINEAR) * t
+
+    #     disp_vis = (disp - disp.min()) / (disp.max() - disp.min()) * 255.0
+    #     disp_vis = disp_vis.astype("uint8")
+    #     disp_vis = cv2.applyColorMap(disp_vis, cv2.COLORMAP_INFERNO)
+
+    #     path = out_dir + imgL_dir[idx].split("/")[-1]
+    #     # combined_img = np.hstack((imgL, disp_vis))
+    #     # cv2.namedWindow("output", cv2.WINDOW_NORMAL)
+    #     # cv2.imshow("output", combined_img)
+    #     cv2.imwrite(path, disp_vis)
+    #     if draw_process:
+    #         while True:
+    #             if cv2.waitKey(0) & 0xFF == ord('q'):
+    #                 break
         
 
 
