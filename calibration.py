@@ -65,7 +65,7 @@ class StereoCalibration(object):
         assert len(self.imagesL) == len(self.imagesR)
 
     def read_images(self , cal_path):
-        filepath = glob.glob(cal_path + '/*.png')
+        filepath = glob.glob(cal_path + '/*.bmp')
         filepath.sort()
         return filepath
     #标定图像

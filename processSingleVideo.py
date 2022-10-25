@@ -34,7 +34,7 @@ for v in videos:
         out = v.split("/")[-1].replace(".h264", "")
         print("=> ",out)
         cmd = 'ffmpeg -i {} {}{}.mp4'.format(v, out_dir, out)
-        # subprocess.run(cmd, shell=True)
+        subprocess.run(cmd, shell=True)
 
         print("=> MPEG4 saved.")
 

@@ -160,9 +160,9 @@ if __name__ == '__main__':
         calibration.calibration_photo(11, 8)
         stereo.show()
 
-    data_dir = "frames/22-10-22_15-34-30/"
-    imgL = cv2.imread(data_dir+"left/00001.png")
-    imgR = cv2.imread(data_dir+"right/00001.png")
+    data_dir = "frames/22-10-25_23-19-58/"
+    imgL = cv2.imread(data_dir+"left/00001.bmp")
+    imgR = cv2.imread(data_dir+"right/00001.bmp")
     #imgL , imgR = preprocess(imgL ,imgR )
    
     height, width = imgL.shape[0:2]

@@ -154,19 +154,25 @@ def inference(left, right, model, n_iter=20):
 def remove_black_borders(image):
     
     ret, image = cv2.threshold(image,5,255,cv2.THRESH_BINARY_INV)
-    print(image)
+    # print(image)
     y_nonzero, x_nonzero, _ = np.nonzero(image)
     return image[np.min(y_nonzero):np.max(y_nonzero), np.min(x_nonzero):np.max(x_nonzero)]
 
 if __name__ == '__main__':
 
-    draw_process = True
-    data_dir = "frames/22-10-22_15-34-30/"
-    out_dir = "depth/22-10-22_15-34-30/"
+    stereo.show()
+    if not type(stereo.m1) is np.ndarray:
+        calibration = StereoCalibration()
+        calibration.calibration_photo(11, 8)
+        stereo.show()
+
+    draw_process = False
+    data_dir = "frames/22-10-25_23-19-58/"
+    out_dir = "depth/22-10-25_23-19-58/"
     os.system("rm -rf {0} && mkdir {0}".format(out_dir))
 
-    imgL_dir = sorted(glob.glob(data_dir+"left/*.png"))
-    imgR_dir = sorted(glob.glob(data_dir+"right/*.png"))
+    imgL_dir = sorted(glob.glob(data_dir+"left/*.bmp"))
+    imgR_dir = sorted(glob.glob(data_dir+"right/*.bmp"))
     assert len(imgL_dir) == len(imgR_dir)
 
     config = stereoCameral(stereo)    # 读取相机内参和外参
@@ -198,8 +204,8 @@ if __name__ == '__main__':
         if draw_process:
             linepic = draw_line_RGB(imgL, imgR)
             cv2.imshow("rectify", linepic)
-            # cv2.imshow("left.png", imgL)
-            # cv2.imshow("right.png", imgR)
+            # cv2.imshow("left.bmp", imgL)
+            # cv2.imshow("right.bmp", imgR)
         
         imgL = remove_black_borders(imgL)
         
