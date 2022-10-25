@@ -1,4 +1,3 @@
-from concurrent.futures import process
 import os
 import time
 from multiprocessing import Process
@@ -28,9 +27,9 @@ useRaspiCam = True
 # Camera init
 ####################################################
 if useRaspiCam:
-    cam = picamera.PiCamera(stereo_mode='side-by-side', stereo_decimate=False)
-    cam.framerate = 120
-    cam.resolution = (2560, 480) # 1280 x 480   2560 x 720  960 x 320
+    cam = picamera.PiCamera(stereo_mode='side-by-side', stereo_decimate=True)
+    cam.framerate = 30
+    cam.resolution = (2560, 720) # 1280 x 480   2560 x 720  960 x 320
     # cam.exposure_mode = 'antishake' # auto
 
     # cam.saturation = 80 # 设置图像视频的饱和度
@@ -43,8 +42,8 @@ if useRaspiCam:
 
     cam.vflip = True
     cam.hflip = True
-    cam.start_preview(fullscreen=False, window=(0,0,1280,480))
-    # cam.start_preview()
+    # cam.start_preview(fullscreen=False, window=(0,0,320,480))
+    cam.start_preview()
 
 ####################################################
 # Start
@@ -64,6 +63,7 @@ def capture(in_left, in_right):
     #     stdout=subprocess.PIPE,
     #     stderr=subprocess.PIPE,
     #     shell=True)
+    print('process id:', os.getpid())
     os.system(cmd)
     
 try:     
@@ -101,6 +101,7 @@ try:
         else:
             if not recording and keyPressed:
                 print("=> Start Recording")
+                print('process id:', os.getpid())
                 videoTime = datetime.now().strftime("%y-%m-%d_%H-%M-%S")
                 in_left = raw_dir + videoTime + "-left.h264"
                 in_right = raw_dir + videoTime + "-right.h264"
@@ -112,7 +113,7 @@ try:
                 #     stdout=subprocess.PIPE,
                 #     stderr=subprocess.PIPE,
                 #     shell=True)
-                camProcess = Process(in_left, in_right)
+                camProcess = Process(target=capture, args=(in_left, in_right))
                 camProcess.start()
                 full_light()
                 recording = not recording
@@ -120,7 +121,7 @@ try:
                 # cam.stop_recording()
                 # process.terminate()
                 try:
-                    camProcess.terminate()
+                    camProcess.kill()
                     print("=> Done! <{}> saved!".format(videoTime))
                     full_dark()
                     time.sleep(0.5)
