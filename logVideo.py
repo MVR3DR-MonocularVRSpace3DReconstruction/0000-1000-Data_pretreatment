@@ -1,3 +1,4 @@
+import sys
 import os
 import time
 from multiprocessing import Process
@@ -21,7 +22,7 @@ frame_dir = "frames/"
 GPIO.setmode(GPIO.BCM)
 recording_key = 5
 GPIO.setup(recording_key,GPIO.IN,GPIO.PUD_UP)
-useRaspiCam = True
+useRaspiCam = False
 
 ####################################################
 # Camera init
@@ -108,27 +109,24 @@ try:
                 
                 cmd = "raspivid -w 1280 -h 720 -fps 20 -p 0,0,480,270 -cs 1 -t 0 -vf -hf -o {} \
                     & raspivid -w 1280 -h 720 -fps 20 -p 480,0,480,270 -cs 0 -t 0 -vf -hf -o {}".format(in_left, in_right)
-                # process = subprocess.Popen(cmd,
-                #     stdin=subprocess.PIPE,
-                #     stdout=subprocess.PIPE,
-                #     stderr=subprocess.PIPE,
-                #     shell=True)
-                camProcess = Process(target=capture, args=(in_left, in_right))
-                camProcess.start()
+                process = subprocess.Popen(cmd,
+                    stdin=subprocess.PIPE,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    shell=True)
+                # camProcess = Process(target=capture, args=(in_left, in_right))
+                # camProcess.start()
                 full_light()
                 recording = not recording
             elif recording and keyPressed:
-                # cam.stop_recording()
-                # process.terminate()
-                try:
-                    camProcess.kill()
-                    print("=> Done! <{}> saved!".format(videoTime))
-                    full_dark()
-                    time.sleep(0.5)
-                    recording = not recording
-                except Exception as e:
-                    print("=> ERROR: ",e)
-
+                
+                cmd = "ps aux  |  grep -i raspivid  |  awk '{print $2}'  |  xargs sudo kill -9"
+                os.system(cmd)
+                print("=> Done! <{}> saved!".format(videoTime))
+                time.sleep(1)
+                full_dark()
+                recording = not recording
+                
 
         keyPressed = False
     
