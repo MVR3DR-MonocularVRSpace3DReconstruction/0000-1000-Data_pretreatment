@@ -1,5 +1,7 @@
+from concurrent.futures import process
 import os
 import time
+from multiprocessing import Process
 import subprocess
 import numpy as np
 from datetime import datetime
@@ -20,15 +22,15 @@ frame_dir = "frames/"
 GPIO.setmode(GPIO.BCM)
 recording_key = 5
 GPIO.setup(recording_key,GPIO.IN,GPIO.PUD_UP)
-useRaspiCam = False
+useRaspiCam = True
 
 ####################################################
 # Camera init
 ####################################################
 if useRaspiCam:
     cam = picamera.PiCamera(stereo_mode='side-by-side', stereo_decimate=False)
-    cam.framerate = 25
-    cam.resolution = (1280, 480) # 1280 x 480   2560 x 720  960 x 320
+    cam.framerate = 120
+    cam.resolution = (2560, 480) # 1280 x 480   2560 x 720  960 x 320
     # cam.exposure_mode = 'antishake' # auto
 
     # cam.saturation = 80 # 设置图像视频的饱和度
@@ -37,11 +39,11 @@ if useRaspiCam:
     # cam.iso = 800 
     # ISO标准实际上就是来自胶片工业的标准称谓，ISO是衡量胶片对光线敏感程度的标准。
     # 如50 ISO, 64 ISO, 100 ISO表示在曝光感应速度上要比高数值的来得慢，高数值ISO是指超过200以上的标准，如200 ISO, 400 ISO
-    cam.sharpness = 0 #设置图像的锐度值，默认是0，取值范围是-100~100之间
+    # cam.sharpness = 0 #设置图像的锐度值，默认是0，取值范围是-100~100之间
 
     cam.vflip = True
     cam.hflip = True
-    cam.start_preview(fullscreen=False, window=(0,0,640,480))
+    cam.start_preview(fullscreen=False, window=(0,0,1280,480))
     # cam.start_preview()
 
 ####################################################
@@ -54,7 +56,16 @@ keyPressed = False
 videoTime = ""
 in_route = ""
 
-
+def capture(in_left, in_right):
+    cmd = "raspivid -w 1280 -h 720 -fps 20 -p 0,0,480,270 -cs 1 -t 0 -vf -hf -o {} \
+        & raspivid -w 1280 -h 720 -fps 20 -p 480,0,480,270 -cs 0 -t 0 -vf -hf -o {}".format(in_left, in_right)
+    # camP = subprocess.Popen(cmd,
+    #     stdin=subprocess.PIPE,
+    #     stdout=subprocess.PIPE,
+    #     stderr=subprocess.PIPE,
+    #     shell=True)
+    os.system(cmd)
+    
 try:     
     while True:
         ####################################################
@@ -93,24 +104,29 @@ try:
                 videoTime = datetime.now().strftime("%y-%m-%d_%H-%M-%S")
                 in_left = raw_dir + videoTime + "-left.h264"
                 in_right = raw_dir + videoTime + "-right.h264"
-                # cam.start_recording(in_route, format="h264", quality=10)
+                
                 cmd = "raspivid -w 1280 -h 720 -fps 20 -p 0,0,480,270 -cs 1 -t 0 -vf -hf -o {} \
                     & raspivid -w 1280 -h 720 -fps 20 -p 480,0,480,270 -cs 0 -t 0 -vf -hf -o {}".format(in_left, in_right)
-                process = subprocess.Popen(cmd,
-                    stdin=subprocess.PIPE,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
-                    shell=True)
-                
+                # process = subprocess.Popen(cmd,
+                #     stdin=subprocess.PIPE,
+                #     stdout=subprocess.PIPE,
+                #     stderr=subprocess.PIPE,
+                #     shell=True)
+                camProcess = Process(in_left, in_right)
+                camProcess.start()
                 full_light()
                 recording = not recording
             elif recording and keyPressed:
                 # cam.stop_recording()
-                process.terminate()
-                print("=> Done! <{}> saved!".format(videoTime))
-                full_dark()
-                time.sleep(0.5)
-                recording = not recording
+                # process.terminate()
+                try:
+                    camProcess.terminate()
+                    print("=> Done! <{}> saved!".format(videoTime))
+                    full_dark()
+                    time.sleep(0.5)
+                    recording = not recording
+                except Exception as e:
+                    print("=> ERROR: ",e)
 
 
         keyPressed = False
