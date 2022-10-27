@@ -203,11 +203,13 @@ def block_process(sid, eid):
 
 
 def remove_black_borders(image):
-    
-    ret, image = cv2.threshold(image,5,255,cv2.THRESH_BINARY_INV)
-    # print(image)
-    y_nonzero, x_nonzero, _ = np.nonzero(image)
-    return image[np.min(y_nonzero):np.max(y_nonzero), np.min(x_nonzero):np.max(x_nonzero)]
+    height, width = image.shape[0:2]
+    height = height // 2
+    width = width // 2
+    ext_height = (height // 8 - 3) * 8
+    ext_width = (width // 8 - 3) * 8
+    image = image[height-ext_height:height+ext_height, width-ext_width:width+ext_width]
+    return image
 
 if __name__ == '__main__':
 

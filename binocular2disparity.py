@@ -1,8 +1,6 @@
 
 import cv2
 import numpy as np
-import matplotlib.pyplot as plt # plt 用于显示图片
-import matplotlib.image as mpimg # mpimg 用于读取图片
 
 from calibration import StereoCalibration, stereo
 
@@ -151,6 +149,14 @@ def disparity_BM(left_image, right_image, down_scale=False):
 
     return disparityL, disparityR
 
+def remove_black_borders(image):
+    height, width = image.shape[0:2]
+    height = height // 2
+    width = width // 2
+    ext_height = (height // 8 - 3) * 8
+    ext_width = (width // 8 - 3) * 8
+    image = image[height-ext_height:height+ext_height, width-ext_width:width+ext_width]
+    return image
 
 if __name__ == '__main__':
 
@@ -160,37 +166,33 @@ if __name__ == '__main__':
         calibration.calibration_photo(11, 8)
         stereo.show()
 
-    data_dir = "frames/22-10-25_23-19-58/"
-    imgL = cv2.imread(data_dir+"left/00001.bmp")
-    imgR = cv2.imread(data_dir+"right/00001.bmp")
+    data_dir = "frames/22-10-26_01-13-42/"
+    imgL = cv2.imread(data_dir+"left/00100.bmp")
+    imgR = cv2.imread(data_dir+"right/00100.bmp")
     #imgL , imgR = preprocess(imgL ,imgR )
    
     height, width = imgL.shape[0:2]
     config = stereoCameral(stereo)    # 读取相机内参和外参
 
     # # 去畸变
-    imgL = undistortion(imgL ,config.cam_matrix_left , config.distortion_l )
-    imgR = undistortion(imgR ,config.cam_matrix_right, config.distortion_r )
+    # imgL = undistortion(imgL ,config.cam_matrix_left , config.distortion_l )
+    # imgR = undistortion(imgR ,config.cam_matrix_right, config.distortion_r )
    
     # 去畸变和几何极线对齐
-    map1x, map1y, map2x, map2y, Q = getRectifyTransform(height, width, config)
-    iml_rectified, imr_rectified = rectifyImage(imgL, imgR, map1x, map1y, map2x, map2y)
+    # map1x, map1y, map2x, map2y, Q = getRectifyTransform(height, width, config)
+    # imgL, imgR = rectifyImage(imgL, imgR, map1x, map1y, map2x, map2y)
     
-    linepic = draw_line_RGB(iml_rectified , imr_rectified)
+    linepic = draw_line_RGB(imgL , imgR)
     cv2.imwrite("LR.jpg", linepic)
 
+    imgL = remove_black_borders(imgL)
+    imgR = remove_black_borders(imgR)
+    
+    linepic = draw_line_RGB(imgL , imgR)
+    cv2.imwrite("cropLR.jpg", linepic)
     # 计算视差
-    dispL, dispR = disparity_SGBM(iml_rectified, imr_rectified) # disparity_SGBM  disparity_BM
+    dispL, dispR = disparity_SGBM(imgL, imgR) # disparity_SGBM  disparity_BM
     
     
     linepic2 = draw_line_depth(dispL, dispR)
     cv2.imwrite("dispLR.jpg", linepic2)
-
-    # reproject
-    depthL = cv2.reprojectImageTo3D(dispL, Q)
-    cv2.imwrite("depthL.jpg", depthL)
-    # while True:
-    #     if cv2.waitKey(1) & 0xFF == ord('q'):
-    #         break
-
-#     points_3d = cv2.reprojectImageTo3D(dispL, Q)
