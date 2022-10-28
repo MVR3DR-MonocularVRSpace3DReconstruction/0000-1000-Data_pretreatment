@@ -49,10 +49,10 @@ for v in videos:
         os.system("mkdir {0}/{1}".format(frame_dir, out)) # rm -rf {0}/{1} && 
         if isLeftVideo:
             os.system("mkdir {0}/{1}/left".format(frame_dir, out))
-            cmd = "ffmpeg -i {}{}-left.h264 -r 20 -f image2 {}/{}/left/%05d.bmp".format(raw_dir, out, frame_dir, out)
+            cmd = "ffmpeg -i {}{}-left.h264 -r 20 -f image2 {}/{}/left/%05d.png".format(raw_dir, out, frame_dir, out)
         else:
             os.system("mkdir {0}/{1}/right".format(frame_dir, out))
-            cmd = "ffmpeg -i {}{}-right.h264 -r 20 -f image2 {}/{}/right/%05d.bmp".format(raw_dir, out, frame_dir, out)
+            cmd = "ffmpeg -i {}{}-right.h264 -r 20 -f image2 {}/{}/right/%05d.png".format(raw_dir, out, frame_dir, out)
         print(cmd)
         subprocess.run(cmd, shell=True)
         
